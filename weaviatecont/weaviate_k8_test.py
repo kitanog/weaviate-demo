@@ -370,9 +370,10 @@ DEFAULT_SAMPLE_PRODUCTS = [
     }
 ]
 
+
 def main():
     """
-    Main execution function demonstrating service usage
+    Main execution function demonstrating service usage with detailed results
     This is kept for backward compatibility and testing
     """
     try:
@@ -385,27 +386,69 @@ def main():
                     # Test all search capabilities
                     test_query = "comfortable headphones for work"
                     print(f"\n🔍 Testing searches for: '{test_query}'")
+                    print("=" * 60)
                     
                     # Hybrid search test
+                    print("\n📊 HYBRID SEARCH RESULTS:")
+                    print("-" * 40)
                     hybrid_results = service.hybrid_search(test_query)
-                    print(f"\n📊 Hybrid Search Results: {len(hybrid_results)} found")
-                    print(f"\n📊 Hybrid Search Results: {hybrid_results}")
+                    print(f"Found {len(hybrid_results)} results")
+                    
+                    for i, result in enumerate(hybrid_results, 1):
+                        print(f"\n{i}. {result['name']} (${result['price']:.2f})")
+                        print(f"   Category: {result['category']} | Brand: {result['brand']}")
+                        print(f"   Score: {result.get('score', 'N/A')}")
+                        print(f"   Description: {result['description'][:100]}...")
+                        if result.get('tags'):
+                            print(f"   Tags: {', '.join(result['tags'])}")
                     
                     # Keyword search test
+                    print("\n\n📝 KEYWORD SEARCH RESULTS:")
+                    print("-" * 40)
                     keyword_results = service.keyword_search(test_query)
-                    print(f"📝 Keyword Search Results: {len(keyword_results)} found")
-                    print(f"📝 Keyword Search Results: {keyword_results} ")
+                    print(f"Found {len(keyword_results)} results")
+                    
+                    for i, result in enumerate(keyword_results, 1):
+                        print(f"\n{i}. {result['name']} (${result['price']:.2f})")
+                        print(f"   Category: {result['category']} | Brand: {result['brand']}")
+                        print(f"   Score: {result.get('score', 'N/A')}")
+                        print(f"   Description: {result['description'][:100]}...")
                     
                     # Vector search test
+                    print("\n\n🧠 VECTOR SEARCH RESULTS:")
+                    print("-" * 40)
                     vector_results = service.vector_search(test_query)
-                    print(f"🧠 Vector Search Results: {len(vector_results)} found")
-                    print(f"🧠 Vector Search Results: {vector_results}")
+                    print(f"Found {len(vector_results)} results")
+                    
+                    for i, result in enumerate(vector_results, 1):
+                        print(f"\n{i}. {result['name']} (${result['price']:.2f})")
+                        print(f"   Category: {result['category']} | Brand: {result['brand']}")
+                        print(f"   Distance: {result.get('distance', 'N/A')}")
+                        print(f"   Description: {result['description'][:100]}...")
                     
                     # RAG search test
+                    print("\n\n🤖 RAG SEARCH RESULTS:")
+                    print("-" * 40)
                     rag_results = service.rag_search(test_query)
-                    print(f"🤖 RAG Search Results: {len(rag_results)} found")
-                    print(f"🤖 RAG Search Results: {rag_results}")
-
+                    print(f"Found {len(rag_results)} results")
+                    
+                    for i, result in enumerate(rag_results, 1):
+                        print(f"\n{i}. {result['name']} (${result['price']:.2f})")
+                        print(f"   Category: {result['category']} | Brand: {result['brand']}")
+                        print(f"   Distance: {result.get('distance', 'N/A')}")
+                        print(f"   Description: {result['description'][:100]}...")
+                        if result.get('generated_content'):
+                            print(f"   🤖 AI Generated: {result['generated_content'][:150]}...")
+                        else:
+                            print(f"   🤖 AI Generated: No content generated")
+                    
+                    # Summary comparison
+                    print("\n\n📈 SEARCH COMPARISON SUMMARY:")
+                    print("=" * 60)
+                    print(f"Hybrid Search:  {len(hybrid_results)} results")
+                    print(f"Keyword Search: {len(keyword_results)} results") 
+                    print(f"Vector Search:  {len(vector_results)} results")
+                    print(f"RAG Search:     {len(rag_results)} results")
                     
     except Exception as e:
         print(f"❌ Application error: {e}")
