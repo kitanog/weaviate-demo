@@ -4,26 +4,343 @@ from weaviate.classes.config import Configure, Property, DataType
 from weaviate.classes.query import MetadataQuery
 import json
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 
 # Poka-yoke: Always override environment variables to ensure latest values
 load_dotenv(override=True)
 
-# Poka-yoke: Validate required environment variables exist
-required_env_vars = ["WEAVIATE_URL", "WEAVIATE_API_KEY", "COHERE_API_KEY", "OPENAI_API_KEY"]
-missing_vars = [var for var in required_env_vars if not os.environ.get(var)]
-if missing_vars:
-    raise ValueError(f"Missing required environment variables: {missing_vars}")
+class WeaviateService:
+    """
+    Service class for managing Weaviate operations with proper error handling
+    and connection management following v4 client patterns.
+    """
+    
+    def __init__(self):
+        """Initialize Weaviate service with environment validation"""
+        # Poka-yoke: Validate required environment variables exist
+        self.required_env_vars = ["WEAVIATE_URL", "WEAVIATE_API_KEY", "COHERE_API_KEY", "OPENAI_API_KEY"]
+        self._validate_environment()
+        
+        # Store credentials for connection reuse
+        self.weaviate_url = os.environ["WEAVIATE_URL"]
+        self.weaviate_api_key = os.environ["WEAVIATE_API_KEY"]
+        self.cohere_api_key = os.environ["COHERE_API_KEY"]
+        self.openai_api_key = os.environ["OPENAI_API_KEY"]
+        
+        self.client = None
+        self.collection_name = "Catalog"
 
-# Get credentials from environment
-weaviate_url = os.environ["WEAVIATE_URL"]
-weaviate_api_key = os.environ["WEAVIATE_API_KEY"]
-cohere_api_key = os.environ["COHERE_API_KEY"]
-openai_api_key = os.environ["OPENAI_API_KEY"]
+    def _validate_environment(self) -> None:
+        """Validate that all required environment variables are present"""
+        missing_vars = [var for var in self.required_env_vars if not os.environ.get(var)]
+        if missing_vars:
+            raise ValueError(f"Missing required environment variables: {missing_vars}")
 
-# Sample ecommerce catalog data
-sample_products = [
+    def connect(self) -> weaviate.WeaviateClient:
+        """
+        Establish connection to Weaviate Cloud using v4 client
+        Returns the client instance for method chaining
+        """
+        try:
+            self.client = weaviate.connect_to_weaviate_cloud(
+                cluster_url=self.weaviate_url,
+                auth_credentials=Auth.api_key(self.weaviate_api_key),
+                headers={
+                    "X-OpenAI-Api-Key": self.openai_api_key,
+                    "X-Cohere-Api-Key": self.cohere_api_key
+                }
+            )
+            print("✅ Successfully connected to Weaviate Cloud")
+            return self.client
+        except Exception as e:
+            print(f"❌ Failed to connect to Weaviate Cloud: {e}")
+            raise
+
+    def create_collection(self) -> bool:
+        """
+        Create the Catalog collection with v4 syntax and error handling
+        Returns True if successful, False otherwise
+        """
+        try:
+            if not self.client:
+                raise ValueError("Client not connected. Call connect() first.")
+                
+            # Poka-yoke: Check if collection already exists and recreate
+            if self.client.collections.exists(self.collection_name):
+                print(f"⚠️ Collection '{self.collection_name}' already exists. Deleting and recreating...")
+                self.client.collections.delete(self.collection_name)
+            
+            # Create collection with OpenAI vectorizer and proper schema
+            collection = self.client.collections.create(
+                name=self.collection_name,
+                description="EcomMax product catalog for semantic search operations",
+                vector_config=Configure.Vectors.text2vec_openai(
+                    model="text-embedding-3-small",
+                    dimensions=1536
+                ),
+                generative_config=Configure.Generative.openai(
+                    model="gpt-3.5-turbo"
+                ),  # Enable RAG capabilities, can be configured further to tune the model
+                properties=[
+                    Property(name="product_id", data_type=DataType.TEXT, description="Unique product identifier"),
+                    Property(name="name", data_type=DataType.TEXT, description="Product name for search"),
+                    Property(name="description", data_type=DataType.TEXT, description="Detailed product description"),
+                    Property(name="category", data_type=DataType.TEXT, description="Product category classification"),
+                    Property(name="price", data_type=DataType.NUMBER, description="Product price in USD"),
+                    Property(name="brand", data_type=DataType.TEXT, description="Product brand identifier"),
+                    Property(name="tags", data_type=DataType.TEXT_ARRAY, description="Product tags for filtering")
+                ]
+            )
+            print(f"✅ {self.collection_name} collection created successfully")
+            return True
+        except Exception as e:
+            print(f"❌ Error creating collection: {e}")
+            return False
+
+    def add_products(self, products: List[Dict[str, Any]]) -> bool:
+        """
+        Add product data using v4 batch insert with validation
+        Args:
+            products: List of product dictionaries with required schema
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if not self.client:
+                raise ValueError("Client not connected. Call connect() first.")
+                
+            catalog = self.client.collections.get(self.collection_name)
+            
+            # Poka-yoke: Validate product schema before insertion
+            required_fields = {"product_id", "name", "description", "category", "price", "brand", "tags"}
+            
+            # Use v4 batch insert for optimal performance
+            with catalog.batch.dynamic() as batch:
+                for i, product in enumerate(products):
+                    # Validate each product has required fields
+                    missing_fields = required_fields - set(product.keys())
+                    if missing_fields:
+                        print(f"⚠️ Skipping product {i}: missing fields {missing_fields}")
+                        continue
+                        
+                    batch.add_object(
+                        properties={
+                            "product_id": str(product["product_id"]),
+                            "name": str(product["name"]),
+                            "description": str(product["description"]),
+                            "category": str(product["category"]),
+                            "price": float(product["price"]),
+                            "brand": str(product["brand"]),
+                            "tags": product["tags"] if isinstance(product["tags"], list) else []
+                        }
+                    )
+            
+            # Poka-yoke: Verify data insertion was successful
+            total_objects = catalog.aggregate.over_all(total_count=True)
+            print(f"✅ Products added successfully. Total objects: {total_objects.total_count}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error adding products: {e}")
+            return False
+
+    def hybrid_search(self, query: str, limit: int = 5, alpha: float = 0.5) -> List[Dict[str, Any]]:
+        """
+        Perform hybrid search combining vector and keyword search
+        Args:
+            query: Search query string
+            limit: Maximum number of results to return
+            alpha: Balance between vector (0.0) and keyword (1.0) search
+        Returns:
+            List of search results with metadata
+        """
+        try:
+            if not self.client:
+                raise ValueError("Client not connected. Call connect() first.")
+                
+            catalog = self.client.collections.get(self.collection_name)
+            
+            response = catalog.query.hybrid(
+                query=query,
+                alpha=alpha,  # Balance between vector and keyword search
+                limit=limit,
+                return_metadata=MetadataQuery(score=True, explain_score=True)
+            )
+            
+            # Format results for consistent API response
+            results = []
+            for obj in response.objects:
+                results.append({
+                    "product_id": obj.properties.get("product_id"),
+                    "name": obj.properties.get("name"),
+                    "description": obj.properties.get("description"),
+                    "category": obj.properties.get("category"),
+                    "price": obj.properties.get("price"),
+                    "brand": obj.properties.get("brand"),
+                    "tags": obj.properties.get("tags", []),
+                    "score": obj.metadata.score if obj.metadata else None,
+                    "explain_score": obj.metadata.explain_score if obj.metadata else None
+                })
+                
+            return results
+            
+        except Exception as e:
+            print(f"❌ Error in hybrid search: {e}")
+            return []
+
+    def keyword_search(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Perform BM25 keyword search using v4 syntax
+        Args:
+            query: Search query string
+            limit: Maximum number of results to return
+        Returns:
+            List of search results with BM25 scores
+        """
+        try:
+            if not self.client:
+                raise ValueError("Client not connected. Call connect() first.")
+                
+            catalog = self.client.collections.get(self.collection_name)
+            
+            response = catalog.query.bm25(
+                query=query,
+                limit=limit,
+                return_metadata=MetadataQuery(score=True)
+            )
+            
+            # Format results for consistent API response, could have made this a single function but kept separate for clarity
+            results = []
+            for obj in response.objects:
+                results.append({
+                    "product_id": obj.properties.get("product_id"),
+                    "name": obj.properties.get("name"),
+                    "description": obj.properties.get("description"),
+                    "category": obj.properties.get("category"),
+                    "price": obj.properties.get("price"),
+                    "brand": obj.properties.get("brand"),
+                    "tags": obj.properties.get("tags", []),
+                    "score": obj.metadata.score if obj.metadata else None
+                })
+                
+            return results
+            
+        except Exception as e:
+            print(f"❌ Error in keyword search: {e}")
+            return []
+
+    def vector_search(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Perform pure vector similarity search using v4 syntax
+        Args:
+            query: Search query string
+            limit: Maximum number of results to return
+        Returns:
+            List of search results with vector distances
+        """
+        try:
+            if not self.client:
+                raise ValueError("Client not connected. Call connect() first.")
+                
+            catalog = self.client.collections.get(self.collection_name)
+            
+            response = catalog.query.near_text(
+                query=query,
+                limit=limit,
+                return_metadata=MetadataQuery(distance=True)
+            )
+            
+            # Format results for consistent API response, could have made this a single function but kept separate for clarity
+            results = []
+            for obj in response.objects:
+                results.append({
+                    "product_id": obj.properties.get("product_id"),
+                    "name": obj.properties.get("name"),
+                    "description": obj.properties.get("description"),
+                    "category": obj.properties.get("category"),
+                    "price": obj.properties.get("price"),
+                    "brand": obj.properties.get("brand"),
+                    "tags": obj.properties.get("tags", []),
+                    "distance": obj.metadata.distance if obj.metadata else None
+                })
+                
+            return results
+            
+        except Exception as e:
+            print(f"❌ Error in vector search: {e}")
+            return []
+
+    def rag_search(self, query: str, limit: int = 3, prompt_template: str = None) -> List[Dict[str, Any]]:
+        """
+        Perform RAG (Retrieval Augmented Generation) using v4 syntax
+        Args:
+            query: Search query string
+            limit: Maximum number of results to return
+            prompt_template: Custom prompt template for generation
+        Returns:
+            List of search results with generated content
+        """
+        try:
+            if not self.client:
+                raise ValueError("Client not connected. Call connect() first.")
+                
+            catalog = self.client.collections.get(self.collection_name)
+            
+            # Default prompt template if none provided
+            if not prompt_template:
+                prompt_template = f"Describe this specific product and explain why it would be good for: {query}"
+            
+            response = catalog.generate.near_text(
+                query=query,
+                limit=limit,
+                grouped_task=prompt_template, #changed from single_prompt to grouped_task
+                return_metadata=MetadataQuery(distance=True)
+            )
+            
+            # Format results for consistent API response, could have made this a single function but kept separate for clarity
+            results = []
+            for obj in response.objects:
+                results.append({
+                    "product_id": obj.properties.get("product_id"),
+                    "name": obj.properties.get("name"),
+                    "description": obj.properties.get("description"),
+                    "category": obj.properties.get("category"),
+                    "price": obj.properties.get("price"),
+                    "brand": obj.properties.get("brand"),
+                    "tags": obj.properties.get("tags", []),
+                    "generated_content": obj.generated,
+                    "distance": obj.metadata.distance if obj.metadata else None
+                })
+                
+            return results
+            
+        except Exception as e:
+            print(f"❌ Error in RAG search: {e}")
+            return []
+
+    def close(self) -> None:
+        """Close the Weaviate client connection safely"""
+        if self.client:
+            try:
+                self.client.close()
+                print("🔌 Weaviate connection closed successfully")
+            except Exception as e:
+                print(f"⚠️ Warning: Error closing connection: {e}")
+            finally:
+                self.client = None
+
+    def __enter__(self):
+        """Context manager entry - establish connection"""
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - ensure connection is closed"""
+        self.close()
+
+# Sample data for testing purposes - kept for backward compatibility
+DEFAULT_SAMPLE_PRODUCTS = [
     {
         "product_id": "prod-001",
         "name": "Wireless Bluetooth Headphones",
@@ -31,12 +348,7 @@ sample_products = [
         "category": "Electronics",
         "price": 199.99,
         "brand": "AudioTech",
-        "tags": ["wireless", "bluetooth", "noise-cancelling", "premium"],
-        "specifications": {
-            "battery_life": "30 hours",
-            "connectivity": "Bluetooth 5.0",
-            "weight": "250g"
-        }
+        "tags": ["wireless", "bluetooth", "noise-cancelling", "premium"]
     },
     {
         "product_id": "prod-002", 
@@ -45,12 +357,7 @@ sample_products = [
         "category": "Furniture",
         "price": 349.99,
         "brand": "ErgoDesk",
-        "tags": ["ergonomic", "office", "comfortable", "adjustable"],
-        "specifications": {
-            "material": "Mesh and leather",
-            "weight_capacity": "120kg",
-            "adjustable_height": "Yes"
-        }
+        "tags": ["ergonomic", "office", "comfortable", "adjustable"]
     },
     {
         "product_id": "prod-003",
@@ -59,228 +366,49 @@ sample_products = [
         "category": "Wearables",
         "price": 299.99,
         "brand": "FitTech",
-        "tags": ["fitness", "smartwatch", "waterproof", "gps"],
-        "specifications": {
-            "battery_life": "7 days",
-            "water_resistance": "50m",
-            "sensors": "Heart rate, GPS, accelerometer"
-        }
+        "tags": ["fitness", "smartwatch", "waterproof", "gps"]
     }
 ]
 
-def connect_to_weaviate():
-    """Connect to Weaviate Cloud using v4 client"""
-    try:
-        client = weaviate.connect_to_weaviate_cloud(
-            cluster_url=weaviate_url,
-            auth_credentials=Auth.api_key(weaviate_api_key),
-            headers={
-                "X-OpenAI-Api-Key": openai_api_key,
-                "X-Cohere-Api-Key": cohere_api_key
-            }
-        )
-        print("✅ Successfully connected to Weaviate Cloud")
-        return client
-    except Exception as e:
-        print(f"❌ Failed to connect to Weaviate Cloud: {e}")
-        raise
-
-def create_catalog_collection(client):
-    """Create the Catalog collection with proper v4 syntax"""
-    try:
-        # Poka-yoke: Check if collection already exists
-        if client.collections.exists("Catalog"):
-            print("⚠️ Collection 'Catalog' already exists. Deleting and recreating...")
-            client.collections.delete("Catalog")
-        
-        # Create collection with OpenAI vectorizer
-        collection = client.collections.create(
-            name="Catalog",
-            description="EcomMax product catalog for semantic search",
-            vector_config=Configure.Vectors.text2vec_openai(
-                model="text-embedding-3-small",
-                dimensions=1536
-            ),
-            generative_config=Configure.Generative.openai(),  # For RAG capabilities
-            properties=[
-                Property(name="product_id", data_type=DataType.TEXT, description="Unique product identifier"),
-                Property(name="name", data_type=DataType.TEXT, description="Product name"),
-                Property(name="description", data_type=DataType.TEXT, description="Product description"),
-                Property(name="category", data_type=DataType.TEXT, description="Product category"),
-                Property(name="price", data_type=DataType.NUMBER, description="Product price in USD"),
-                Property(name="brand", data_type=DataType.TEXT, description="Product brand"),
-                Property(name="tags", data_type=DataType.TEXT_ARRAY, description="Product tags")
-            ]
-        )
-        print("✅ Catalog collection created successfully")
-        return collection
-    except Exception as e:
-        print(f"❌ Error creating collection: {e}")
-        raise
-
-def add_sample_data(client):
-    """Add sample product data using v4 batch insert"""
-    try:
-        catalog = client.collections.get("Catalog")
-        
-        # Poka-yoke: Use batch insert for efficiency
-        with catalog.batch.dynamic() as batch:
-            for product in sample_products:
-                batch.add_object(
-                    properties={
-                        "product_id": product["product_id"],
-                        "name": product["name"],
-                        "description": product["description"],
-                        "category": product["category"],
-                        "price": product["price"],
-                        "brand": product["brand"],
-                        "tags": product["tags"]
-                    }
-                )
-        
-        print("✅ Sample data added successfully")
-        
-        # Poka-yoke: Verify data was inserted
-        total_objects = catalog.aggregate.over_all(total_count=True)
-        print(f"📊 Total objects in collection: {total_objects.total_count}")
-        
-    except Exception as e:
-        print(f"❌ Error adding sample data: {e}")
-        raise
-
-def hybrid_search_example(client, query: str):
-    """Perform hybrid search using v4 syntax"""
-    try:
-        catalog = client.collections.get("Catalog")
-        
-        response = catalog.query.hybrid(
-            query=query,
-            alpha=0.5,  # Balance between vector and keyword search
-            limit=5,
-            return_metadata=MetadataQuery(score=True, explain_score=True)
-        )
-        
-        print(f"\n🔍 Hybrid Search Results for: '{query}'")
-        print("-" * 50)
-        
-        if response.objects:
-            for i, obj in enumerate(response.objects, 1):
-                print(f"{i}. {obj.properties['name']} ({obj.properties['category']})")
-                print(f"   Price: ${obj.properties['price']}")
-                print(f"   Score: {obj.metadata.score:.4f}")
-                print(f"   Description: {obj.properties['description'][:100]}...")
-                print()
-        else:
-            print("No results found")
-            
-    except Exception as e:
-        print(f"❌ Error in hybrid search: {e}")
-
-def keyword_search_example(client, query: str):
-    """Perform BM25 keyword search using v4 syntax"""
-    try:
-        catalog = client.collections.get("Catalog")
-        
-        response = catalog.query.bm25(
-            query=query,
-            limit=5,
-            return_metadata=MetadataQuery(score=True)
-        )
-        
-        print(f"\n🔤 Keyword Search Results for: '{query}'")
-        print("-" * 50)
-        
-        if response.objects:
-            for i, obj in enumerate(response.objects, 1):
-                print(f"{i}. {obj.properties['name']} ({obj.properties['category']})")
-                print(f"   Price: ${obj.properties['price']}")
-                print(f"   Score: {obj.metadata.score:.4f}")
-                print()
-        else:
-            print("No results found")
-            
-    except Exception as e:
-        print(f"❌ Error in keyword search: {e}")
-
-def vector_search_example(client, query: str):
-    """Perform pure vector search using v4 syntax"""
-    try:
-        catalog = client.collections.get("Catalog")
-        
-        response = catalog.query.near_text(
-            query=query,
-            limit=5,
-            return_metadata=MetadataQuery(distance=True)
-        )
-        
-        print(f"\n🧠 Vector Search Results for: '{query}'")
-        print("-" * 50)
-        
-        if response.objects:
-            for i, obj in enumerate(response.objects, 1):
-                print(f"{i}. {obj.properties['name']} ({obj.properties['category']})")
-                print(f"   Price: ${obj.properties['price']}")
-                print(f"   Distance: {obj.metadata.distance:.4f}")
-                print()
-        else:
-            print("No results found")
-            
-    except Exception as e:
-        print(f"❌ Error in vector search: {e}")
-
-def rag_example(client, query: str):
-    """Perform RAG (Retrieval Augmented Generation) using v4 syntax"""
-    try:
-        catalog = client.collections.get("Catalog")
-        
-        response = catalog.generate.near_text(
-            query=query,
-            limit=3,
-            single_prompt=f"Describe this product and explain why it would be good for: {query}",
-            return_metadata=MetadataQuery(distance=True)
-        )
-        
-        print(f"\n🤖 RAG Results for: '{query}'")
-        print("-" * 50)
-        
-        if response.objects:
-            for i, obj in enumerate(response.objects, 1):
-                print(f"{i}. {obj.properties['name']}")
-                print(f"   Generated Response: {obj.generated}")
-                print(f"   Distance: {obj.metadata.distance:.4f}")
-                print()
-        else:
-            print("No results found")
-            
-    except Exception as e:
-        print(f"❌ Error in RAG search: {e}")
-
 def main():
-    """Main execution function with proper error handling"""
-    client = None
+    """
+    Main execution function demonstrating service usage
+    This is kept for backward compatibility and testing
+    """
     try:
-        # Connect to Weaviate Cloud
-        client = connect_to_weaviate()
-        
-        # Setup initial collection and data
-        create_catalog_collection(client)
-        add_sample_data(client)
-        
-        # Test different search capabilities
-        test_query = "comfortable headphones for work"
-        
-        hybrid_search_example(client, test_query)
-        keyword_search_example(client, test_query)
-        vector_search_example(client, test_query)
-        rag_example(client, test_query)
-        
+        # Use context manager for proper resource management
+        with WeaviateService() as service:
+            # Setup collection and add sample data
+            if service.create_collection():
+                if service.add_products(DEFAULT_SAMPLE_PRODUCTS):
+                    
+                    # Test all search capabilities
+                    test_query = "comfortable headphones for work"
+                    print(f"\n🔍 Testing searches for: '{test_query}'")
+                    
+                    # Hybrid search test
+                    hybrid_results = service.hybrid_search(test_query)
+                    print(f"\n📊 Hybrid Search Results: {len(hybrid_results)} found")
+                    print(f"\n📊 Hybrid Search Results: {hybrid_results}")
+                    
+                    # Keyword search test
+                    keyword_results = service.keyword_search(test_query)
+                    print(f"📝 Keyword Search Results: {len(keyword_results)} found")
+                    print(f"📝 Keyword Search Results: {keyword_results} ")
+                    
+                    # Vector search test
+                    vector_results = service.vector_search(test_query)
+                    print(f"🧠 Vector Search Results: {len(vector_results)} found")
+                    print(f"🧠 Vector Search Results: {vector_results}")
+                    
+                    # RAG search test
+                    rag_results = service.rag_search(test_query)
+                    print(f"🤖 RAG Search Results: {len(rag_results)} found")
+                    print(f"🤖 RAG Search Results: {rag_results}")
+
+                    
     except Exception as e:
         print(f"❌ Application error: {e}")
-    finally:
-        # Poka-yoke: Always close connection
-        if client:
-            client.close()
-            print("🔌 Connection closed")
 
 if __name__ == "__main__":
     main()
