@@ -1,0 +1,10 @@
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore environment files
+.env
+weaviatecont/.env
+
+# Ignore Docker-related files
+*.log

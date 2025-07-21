@@ -1,0 +1,5 @@
+weaviate-client  # For interacting with Weaviate
+python-dotenv    # For loading environment variables from a .env file
+fastapi
+uvicorn
+jinja2

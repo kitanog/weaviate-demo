@@ -1,0 +1,122 @@
+# weaviate-cloud-deployment.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: weaviate-namespace
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weaviate-app
+  namespace: weaviate-namespace
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: weaviate-app
+  template:
+    metadata:
+      labels:
+        app: weaviate-app
+    spec:
+      containers:
+      - name: weaviate-app
+        image: kiitangnk/weaviate_app:latest
+        ports:
+        - containerPort: 8080
+        - containerPort: 50051
+        env:
+        # Weaviate Cloud Service configuration
+        - name: WEAVIATE_CLOUD_ENABLED
+          value: "true"
+        - name: WEAVIATE_URL
+          valueFrom:
+            secretKeyRef:
+              name: weaviate-secrets
+              key: WEAVIATE_URL
+        - name: WEAVIATE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: weaviate-secrets
+              key: WEAVIATE_API_KEY
+        # Application configuration
+        - name: QUERY_DEFAULTS_LIMIT
+          value: "20"
+        - name: DEFAULT_VECTORIZER_MODULE
+          value: "text2vec-openai"
+        - name: ENABLE_MODULES
+          value: "text2vec-openai,text2vec-cohere,generative-openai"
+        # OpenAI API Key (if using OpenAI modules)
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: weaviate-secrets
+              key: OPENAI_API_KEY
+              optional: true
+        # Cohere API Key (if using Cohere modules)
+        - name: COHERE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: weaviate-secrets
+              key: COHERE_API_KEY
+              optional: true
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        readinessProbe:
+          httpGet:
+            path: /v1/.well-known/ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /v1/.well-known/live
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: weaviate-app-service
+  namespace: weaviate-namespace
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  - name: grpc
+    port: 50051
+    targetPort: 50051
+  selector:
+    app: weaviate-app
+  type: LoadBalancer
+---
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: weaviate-secrets
+#   namespace: weaviate-namespace
+# type: Opaque
+# stringData:
+#   # Plain text values - Kubernetes will encode them automatically
+#   weaviate-api-key: "abc"
+#   openai-api-key: "abc"
+#   cohere-api-key: "abc"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: weaviate-app-config
+  namespace: weaviate-namespace
+data:
+  app.conf: |
+    # Application specific configuration
+    log_level: "info"
+    timeout: "30s"
+    retry_attempts: "3"
