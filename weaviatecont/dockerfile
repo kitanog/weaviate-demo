@@ -7,8 +7,10 @@ WORKDIR /app
 
 # Copy your code and requirements
 COPY weaviate_k8_test.py /app/
+COPY weaviate_k8_web.py /app/
 COPY requirements.txt /app/
-# COPY .env /app/ #for DEVELOPMENT ONLY, not needed in production
+# for DEVELOPMENT ONLY, not needed in production
+# COPY .env /app/
 
 
 # Install dependencies

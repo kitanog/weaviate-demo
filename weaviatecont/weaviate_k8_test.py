@@ -288,8 +288,8 @@ class WeaviateService:
             catalog = self.client.collections.get(self.collection_name)
             
             ##test
-            # print the catalog object
-            print(f"\nCatalog object: {catalog}\n")
+            # print the catalog object for testing purposes
+            # print(f"\nCatalog object: {catalog}\n")
             # Default prompt template if none provided
             if not prompt_template:
                 prompt_template = f"Describe this specific product and explain why it would be good for: {query}"
@@ -297,7 +297,7 @@ class WeaviateService:
             response = catalog.generate.near_text(
                 query=query,
                 limit=limit,
-                grouped_task=prompt_template, #changed from single_prompt to grouped_task
+                single_prompt=prompt_template, #changed from single_prompt to grouped_task
                 return_metadata=MetadataQuery(distance=True)
             )
             
