@@ -10,7 +10,7 @@ metadata:
   name: weaviate-app
   namespace: weaviate-namespace
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: weaviate-app
@@ -21,10 +21,10 @@ spec:
     spec:
       containers:
       - name: weaviate-app
-        image: kiitangnk/weaviate_app:latest
+        image: kiitangnk/weaviate-search-app:linux
         ports:
-        - containerPort: 8080
-        - containerPort: 50051
+        - containerPort: 8000
+        # Environment variables for Weaviate Cloud Service and application configuration
         env:
         # Weaviate Cloud Service configuration
         - name: WEAVIATE_CLOUD_ENABLED
@@ -69,14 +69,14 @@ spec:
             cpu: "1000m"
         readinessProbe:
           httpGet:
-            path: /v1/.well-known/ready
-            port: 8080
+            path: /health
+            port: 8000
           initialDelaySeconds: 30
           periodSeconds: 10
         livenessProbe:
           httpGet:
-            path: /v1/.well-known/live
-            port: 8080
+            path: /health
+            port: 8000
           initialDelaySeconds: 60
           periodSeconds: 30
 ---
@@ -88,11 +88,9 @@ metadata:
 spec:
   ports:
   - name: http
-    port: 8080
-    targetPort: 8080
-  - name: grpc
-    port: 50051
-    targetPort: 50051
+    port: 80
+    targetPort: 8000
+    protocol: TCP
   selector:
     app: weaviate-app
   type: LoadBalancer
@@ -109,14 +107,15 @@ spec:
 #   openai-api-key: "abc"
 #   cohere-api-key: "abc"
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: weaviate-app-config
-  namespace: weaviate-namespace
-data:
-  app.conf: |
-    # Application specific configuration
-    log_level: "info"
-    timeout: "30s"
-    retry_attempts: "3"
+#potentially useful for application specific logging config
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: weaviate-app-config
+#   namespace: weaviate-namespace
+# data:
+#   app.conf: |
+#     # Application specific configuration
+#     log_level: "info"
+#     timeout: "30s"
+#     retry_attempts: "3"

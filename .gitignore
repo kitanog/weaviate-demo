@@ -8,3 +8,9 @@ weaviatecont/.env
 
 # Ignore Docker-related files
 *.log
+
+#ignore pdf files
+*.pdf
+
+#ignore python virtual environment
+pyweave312/

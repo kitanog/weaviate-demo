@@ -7,7 +7,7 @@ import os
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 
-# Poka-yoke: Always override environment variables to ensure latest values
+# p y: Always override environment variables to ensure latest values
 load_dotenv(override=True)
 
 class WeaviateService:
@@ -18,7 +18,7 @@ class WeaviateService:
     
     def __init__(self):
         """Initialize Weaviate service with environment validation"""
-        # Poka-yoke: Validate required environment variables exist
+        # p y: Validate required environment variables exist
         self.required_env_vars = ["WEAVIATE_URL", "WEAVIATE_API_KEY", "COHERE_API_KEY", "OPENAI_API_KEY"]
         self._validate_environment()
         
@@ -66,7 +66,7 @@ class WeaviateService:
             if not self.client:
                 raise ValueError("Client not connected. Call connect() first.")
                 
-            # Poka-yoke: Check if collection already exists and recreate
+            # p y: Check if collection already exists and recreate
             if self.client.collections.exists(self.collection_name):
                 print(f"⚠️ Collection '{self.collection_name}' already exists. Deleting and recreating...")
                 self.client.collections.delete(self.collection_name)
@@ -112,7 +112,7 @@ class WeaviateService:
                 
             catalog = self.client.collections.get(self.collection_name)
             
-            # Poka-yoke: Validate product schema before insertion
+            # p y: Validate product schema before insertion
             required_fields = {"product_id", "name", "description", "category", "price", "brand", "tags"}
             
             # Use v4 batch insert for optimal performance
@@ -136,7 +136,7 @@ class WeaviateService:
                         }
                     )
             
-            # Poka-yoke: Verify data insertion was successful
+            # p y: Verify data insertion was successful
             total_objects = catalog.aggregate.over_all(total_count=True)
             print(f"✅ Products added successfully. Total objects: {total_objects.total_count}")
             return True
@@ -287,6 +287,9 @@ class WeaviateService:
                 
             catalog = self.client.collections.get(self.collection_name)
             
+            ##test
+            # print the catalog object for testing purposes
+            # print(f"\nCatalog object: {catalog}\n")
             # Default prompt template if none provided
             if not prompt_template:
                 prompt_template = f"Describe this specific product and explain why it would be good for: {query}"
@@ -294,7 +297,7 @@ class WeaviateService:
             response = catalog.generate.near_text(
                 query=query,
                 limit=limit,
-                grouped_task=prompt_template, #changed from single_prompt to grouped_task
+                single_prompt=prompt_template, #changed from single_prompt to grouped_task
                 return_metadata=MetadataQuery(distance=True)
             )
             
@@ -370,9 +373,10 @@ DEFAULT_SAMPLE_PRODUCTS = [
     }
 ]
 
+
 def main():
     """
-    Main execution function demonstrating service usage
+    Main execution function demonstrating service usage with detailed results
     This is kept for backward compatibility and testing
     """
     try:
@@ -385,27 +389,69 @@ def main():
                     # Test all search capabilities
                     test_query = "comfortable headphones for work"
                     print(f"\n🔍 Testing searches for: '{test_query}'")
+                    print("=" * 60)
                     
                     # Hybrid search test
+                    print("\n📊 HYBRID SEARCH RESULTS:")
+                    print("-" * 40)
                     hybrid_results = service.hybrid_search(test_query)
-                    print(f"\n📊 Hybrid Search Results: {len(hybrid_results)} found")
-                    print(f"\n📊 Hybrid Search Results: {hybrid_results}")
+                    print(f"Found {len(hybrid_results)} results")
+                    
+                    for i, result in enumerate(hybrid_results, 1):
+                        print(f"\n{i}. {result['name']} (${result['price']:.2f})")
+                        print(f"   Category: {result['category']} | Brand: {result['brand']}")
+                        print(f"   Score: {result.get('score', 'N/A')}")
+                        print(f"   Description: {result['description'][:100]}...")
+                        if result.get('tags'):
+                            print(f"   Tags: {', '.join(result['tags'])}")
                     
                     # Keyword search test
+                    print("\n\n📝 KEYWORD SEARCH RESULTS:")
+                    print("-" * 40)
                     keyword_results = service.keyword_search(test_query)
-                    print(f"📝 Keyword Search Results: {len(keyword_results)} found")
-                    print(f"📝 Keyword Search Results: {keyword_results} ")
+                    print(f"Found {len(keyword_results)} results")
+                    
+                    for i, result in enumerate(keyword_results, 1):
+                        print(f"\n{i}. {result['name']} (${result['price']:.2f})")
+                        print(f"   Category: {result['category']} | Brand: {result['brand']}")
+                        print(f"   Score: {result.get('score', 'N/A')}")
+                        print(f"   Description: {result['description'][:100]}...")
                     
                     # Vector search test
+                    print("\n\n🧠 VECTOR SEARCH RESULTS:")
+                    print("-" * 40)
                     vector_results = service.vector_search(test_query)
-                    print(f"🧠 Vector Search Results: {len(vector_results)} found")
-                    print(f"🧠 Vector Search Results: {vector_results}")
+                    print(f"Found {len(vector_results)} results")
+                    
+                    for i, result in enumerate(vector_results, 1):
+                        print(f"\n{i}. {result['name']} (${result['price']:.2f})")
+                        print(f"   Category: {result['category']} | Brand: {result['brand']}")
+                        print(f"   Distance: {result.get('distance', 'N/A')}")
+                        print(f"   Description: {result['description'][:100]}...")
                     
                     # RAG search test
+                    print("\n\n🤖 RAG SEARCH RESULTS:")
+                    print("-" * 40)
                     rag_results = service.rag_search(test_query)
-                    print(f"🤖 RAG Search Results: {len(rag_results)} found")
-                    print(f"🤖 RAG Search Results: {rag_results}")
-
+                    print(f"Found {len(rag_results)} results")
+                    
+                    for i, result in enumerate(rag_results, 1):
+                        print(f"\n{i}. {result['name']} (${result['price']:.2f})")
+                        print(f"   Category: {result['category']} | Brand: {result['brand']}")
+                        print(f"   Distance: {result.get('distance', 'N/A')}")
+                        print(f"   Description: {result['description'][:100]}...")
+                        if result.get('generated_content'):
+                            print(f"   🤖 AI Generated: {result['generated_content'][:150]}...")
+                        else:
+                            print(f"   🤖 AI Generated: No content generated")
+                    
+                    # Summary comparison
+                    print("\n\n📈 SEARCH COMPARISON SUMMARY:")
+                    print("=" * 60)
+                    print(f"Hybrid Search:  {len(hybrid_results)} results")
+                    print(f"Keyword Search: {len(keyword_results)} results") 
+                    print(f"Vector Search:  {len(vector_results)} results")
+                    print(f"RAG Search:     {len(rag_results)} results")
                     
     except Exception as e:
         print(f"❌ Application error: {e}")

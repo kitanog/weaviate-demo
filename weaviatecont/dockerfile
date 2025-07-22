@@ -1,22 +1,28 @@
-# Use a minimal Python image
+# Use Python
 FROM python:3.12
 
 # Set working directory inside container
 WORKDIR /app
 
 
-# Copy your code and requirements
+# Copy code and requirements
 COPY weaviate_k8_test.py /app/
+COPY weaviate_k8_web.py /app/
 COPY requirements.txt /app/
-# COPY .env /app/ #for DEVELOPMENT ONLY, not needed in production
+# for DEVELOPMENT ONLY, not needed in production
+# COPY .env /app/
 
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+
+# Make sure uvicorn is executable
+RUN which uvicorn && ls -la $(which uvicorn)
 
 EXPOSE 8000
 
 # Run your Python script when container starts
 # CMD ["python", "weaviate_k8_test.py"]
 
-CMD ["uvicorn", "weaviate_k8_web:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "weaviate_k8_web:app", "--host", "0.0.0.0", "--port", "8000"]
