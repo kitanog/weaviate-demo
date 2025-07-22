@@ -13,4 +13,4 @@ weaviatecont/.env
 *.pdf
 
 #ignore python virtual environment
-pyweave312/
+/pyweave312/
