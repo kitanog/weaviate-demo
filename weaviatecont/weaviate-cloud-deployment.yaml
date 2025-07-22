@@ -10,7 +10,7 @@ metadata:
   name: weaviate-app
   namespace: weaviate-namespace
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: weaviate-app
