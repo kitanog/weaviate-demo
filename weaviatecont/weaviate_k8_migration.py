@@ -2,7 +2,7 @@
 """
 Simple Weaviate Collection Migration Script
 ==========================================
-Migrates data from "Question" collection to "QuestionNew" collection
+Migrates data from "Question" collection to "CatalogNew" collection
 and switches vectorizer from OpenAI to Cohere.
 """
 
@@ -52,37 +52,38 @@ def migrate_collection():
     print("Connected to Weaviate")
     
     # Get source collection #could do some error checking here, but keeping it simple
-    source = client.collections.get("Question")
+    source = client.collections.get("Catalog")
     source_count = len(source)
     print(f"Found {source_count} objects in {source.name} collection")
     
-    # Get schema from source collection dynamically
+    # Get properties schema from source collection dynamically
     source_properties = extract_properties_from_collection(source)
     print(f"Extracted {len(source_properties)} properties from source collection:")
     for prop in source_properties:
-        print(f"  - {prop.name}") #NOTE: for some reason I cant print the prop.data_type, have to iterate
-    
+        print(f"  - {prop.name}") #
+
     # Delete target collection if it exists
     """
-    Looks like there is a naming convention that Question-New
+    Looks like there is a naming convention that Catalog-New
     does not follow so i will remove the hyphen and use
-    "QuestionNew" instead.
+    "CatalogNew" instead.
     """
-    if client.collections.exists("QuestionNew"):
-        client.collections.delete("QuestionNew")
-        print("Deleted existing 'QuestionNew' collection")
+    if client.collections.exists("CatalogNew"):
+        client.collections.delete("CatalogNew")
+        print("Deleted existing 'CatalogNew' collection")
     
     # Create new collection with Cohere vectorizer
     client.collections.create(
-        name="QuestionNew",
+        name="CatalogNew",
         properties=source_properties,
         vector_config=Configure.Vectors.text2vec_cohere(
             model="embed-multilingual-v3.0"
         ),
         generative_config=Configure.Generative.cohere()
     )
+    
     # Get target collection
-    target = client.collections.get("QuestionNew")
+    target = client.collections.get("CatalogNew")
 
     print(f"Created {target.name} collection with text2vec-cohere vectorizer")
     

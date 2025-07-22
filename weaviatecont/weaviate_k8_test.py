@@ -12,8 +12,18 @@ load_dotenv(override=True)
 
 class WeaviateService:
     """
-    Service class for managing Weaviate operations with proper error handling
-    and connection management following v4 client patterns.
+    Service class for managing Weaviate operations
+    error handling
+    connection management
+    (uses Weaviate Cloud v4 client)
+    Provides methods for:
+    - Connecting to Weaviate Cloud
+    - Creating collections with v4 syntax
+    - Adding products with v4 batch insert
+    - Performing hybrid, keyword, vector, and RAG searches
+    - Closing connections safely
+    - Environment validation for required variables
+    - Context manager support for automatic connection management
     """
     
     def __init__(self):
@@ -22,7 +32,7 @@ class WeaviateService:
         self.required_env_vars = ["WEAVIATE_URL", "WEAVIATE_API_KEY", "COHERE_API_KEY", "OPENAI_API_KEY"]
         self._validate_environment()
         
-        # Store credentials for connection reuse
+        # Store env variables
         self.weaviate_url = os.environ["WEAVIATE_URL"]
         self.weaviate_api_key = os.environ["WEAVIATE_API_KEY"]
         self.cohere_api_key = os.environ["COHERE_API_KEY"]
@@ -327,7 +337,7 @@ class WeaviateService:
         if self.client:
             try:
                 self.client.close()
-                print("🔌 Weaviate connection closed successfully")
+                print("!!!Weaviate connection closed successfully!!!")
             except Exception as e:
                 print(f"⚠️ Warning: Error closing connection: {e}")
             finally:
