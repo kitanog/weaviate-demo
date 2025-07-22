@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 #load_dotenv()  # Load environment variables from .env file
 load_dotenv(override=True)  # Load environment variables from .env file, allowing overrides
 
-# Best practice: store your credentials in environment variables
+# Best practice: store credentials in environment variables
 weaviate_url = os.environ["WEAVIATE_URL"]
 weaviate_api_key = os.environ["WEAVIATE_API_KEY"]
 

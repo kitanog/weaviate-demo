@@ -7,7 +7,7 @@ import os
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 
-# Poka-yoke: Always override environment variables to ensure latest values
+# p y: Always override environment variables to ensure latest values
 load_dotenv(override=True)
 
 class WeaviateService:
@@ -18,7 +18,7 @@ class WeaviateService:
     
     def __init__(self):
         """Initialize Weaviate service with environment validation"""
-        # Poka-yoke: Validate required environment variables exist
+        # p y: Validate required environment variables exist
         self.required_env_vars = ["WEAVIATE_URL", "WEAVIATE_API_KEY", "COHERE_API_KEY", "OPENAI_API_KEY"]
         self._validate_environment()
         
@@ -66,7 +66,7 @@ class WeaviateService:
             if not self.client:
                 raise ValueError("Client not connected. Call connect() first.")
                 
-            # Poka-yoke: Check if collection already exists and recreate
+            # p y: Check if collection already exists and recreate
             if self.client.collections.exists(self.collection_name):
                 print(f"⚠️ Collection '{self.collection_name}' already exists. Deleting and recreating...")
                 self.client.collections.delete(self.collection_name)
@@ -112,7 +112,7 @@ class WeaviateService:
                 
             catalog = self.client.collections.get(self.collection_name)
             
-            # Poka-yoke: Validate product schema before insertion
+            # p y: Validate product schema before insertion
             required_fields = {"product_id", "name", "description", "category", "price", "brand", "tags"}
             
             # Use v4 batch insert for optimal performance
@@ -136,7 +136,7 @@ class WeaviateService:
                         }
                     )
             
-            # Poka-yoke: Verify data insertion was successful
+            # p y: Verify data insertion was successful
             total_objects = catalog.aggregate.over_all(total_count=True)
             print(f"✅ Products added successfully. Total objects: {total_objects.total_count}")
             return True
