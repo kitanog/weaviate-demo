@@ -20,7 +20,7 @@ gcloud container clusters create weaviate-cluster \
     --min-nodes=1 \
     --max-nodes=3
 
-gcloud container clusters create weaviate-cluster-b \
+gcloud container clusters create weaviate-cluster-a\
     --zone=us-central1 \
     --num-nodes=1 \
     --enable-autoscaling \
@@ -50,7 +50,7 @@ kubectl config use-context weaviate-cluster-a
 kubectl apply -f weaviate-cloud-deployment-clust-a.yaml
 
 # Switch to cluster B context and apply the deployment
-kubectl config use-context weaviate-cluster-a
+kubectl config use-context weaviate-cluster-b
 kubectl apply -f weaviate-cloud-deployment-clust-b.yaml
 
 
@@ -67,7 +67,7 @@ kubectl get pods -n weaviate-namespace
 #logs:
 kubectl logs weaviate-app-### -n weaviate-namespace
 
-#Delete the deployment
+#CLEANUP - Delete the deployment
 kubectl delete deployment weaviate-app -n weaviate-namespace
 #delete the service
 kubectl delete service weaviate-app -n weaviate-namespace
