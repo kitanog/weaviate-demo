@@ -164,8 +164,6 @@ gcloud container clusters delete weaviate-cluster-a --zone=us-central1
 gcloud container clusters delete weaviate-cluster-b --zone=us-central1
 ```
 
-
-
 ### Environment File Setup
 
 Create a `.env` file in your project root:
