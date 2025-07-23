@@ -28,7 +28,7 @@ gcloud container clusters create weaviate-cluster-a\
     --max-nodes=3
 
 gcloud container clusters create weaviate-cluster-b \
-    --zone=us-central1 \
+    --zone=us-central1-a \
     --num-nodes=1 \
     --enable-autoscaling \
     --min-nodes=1 \
