@@ -210,17 +210,9 @@ docker run -d \
 weaviate-demo/
 ├── weaviatecont/          # Main application code
 ├── Dockerfile             # Container definition
-├── docker-compose.yml     # Multi-service orchestration
-├── .env.example          # Environment template
 ├── requirements.txt      # Python dependencies
 └── README.md            # This file
 ```
-
-### Health Check Endpoints
-
-- **Readiness**: `GET /v1/.well-known/ready`
-- **Liveness**: `GET /v1/.well-known/live`
-- **Schema**: `GET /v1/schema`
 
 ## 📚 Additional Resources
 
