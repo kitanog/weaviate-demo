@@ -37,11 +37,15 @@ gcloud container clusters create weaviate-cluster-b \
 
 # 3. Get auth for the cluster
 # This command configures kubectl to use the credentials for the cluster
+#AND CREATES A CONTEXT FOR THE CLUSTER
 gcloud container clusters get-credentials weaviate-cluster --zone=us-central1
 gcloud container clusters get-credentials weaviate-cluster-a --zone=us-central1
 gcloud container clusters get-credentials weaviate-cluster-b --zone=us-central1-a
 
 # 4. Deploy the app and service in a SPECIFIC CLUSTER
+# Apply the secrets
+kubectl apply -f weaviate-secrets.yaml
+
 #Note we only need the loadbalancer service for the web app, not the test script
 #we do not need a separate service o handle ingress since we are using weaviate cloud client via python
 kubectl apply -f weaviate-cloud-deployment.yaml
@@ -54,9 +58,6 @@ kubectl apply -f weaviate-cloud-deployment-clust-a.yaml
 kubectl config use-context gke_weaviate-demo-466501_us-central1-a_weaviate-cluster-b
 kubectl apply -f weaviate-cloud-deployment-clust-b.yaml
 
-
-# Apply the secrets
-kubectl apply -f weaviate-secrets.yaml
 
 # 5. get the status of the deployment
 ##Get contexts:
