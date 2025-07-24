@@ -22,7 +22,6 @@ gcloud container clusters create weaviate-cluster \
 
 gcloud container clusters create weaviate-cluster-a\
     --zone=us-central1 \
-    --context=weaviate-cluster-a \
     --num-nodes=1 \
     --enable-autoscaling \
     --min-nodes=1 \

@@ -1,0 +1,182 @@
+[
+    {
+        "product_id": "prod-004",
+        "name": "Organic Coffee Beans - Colombian Supreme",
+        "description": "Single-origin organic coffee beans from Colombian highlands. Rich, full-bodied flavor with notes of chocolate and caramel.",
+        "category": "Food & Beverages",
+        "price": 24.99,
+        "brand": "Mountain Peak Coffee",
+        "tags": ["organic", "coffee", "colombian", "single-origin", "fair-trade"]
+    },
+    {
+        "product_id": "prod-005",
+        "name": "Stainless Steel Water Bottle",
+        "description": "Double-wall insulated stainless steel water bottle that keeps drinks cold for 24 hours or hot for 12 hours. BPA-free and eco-friendly.",
+        "category": "Sports & Outdoors",
+        "price": 32.99,
+        "brand": "HydroLife",
+        "tags": ["insulated", "stainless-steel", "eco-friendly", "bpa-free"]
+    },
+    {
+        "product_id": "prod-006",
+        "name": "Wireless Charging Pad",
+        "description": "Fast wireless charging pad compatible with all Qi-enabled devices. Sleek design with LED charging indicator.",
+        "category": "Electronics",
+        "price": 39.99,
+        "brand": "ChargeTech",
+        "tags": ["wireless-charging", "qi-compatible", "fast-charging", "led-indicator"]
+    },
+    {
+        "product_id": "prod-007",
+        "name": "Luxury Silk Pillowcase Set",
+        "description": "100% mulberry silk pillowcase set that promotes healthy hair and skin. Hypoallergenic and temperature regulating.",
+        "category": "Home & Bedding",
+        "price": 89.99,
+        "brand": "SilkDreams",
+        "tags": ["silk", "luxury", "hypoallergenic", "hair-care", "skin-care"]
+    },
+    {
+        "product_id": "prod-008",
+        "name": "Professional Chef's Knife",
+        "description": "High-carbon German steel chef's knife with ergonomic handle. Perfect balance and razor-sharp edge for precision cutting.",
+        "category": "Kitchen & Dining",
+        "price": 129.99,
+        "brand": "BladeForge",
+        "tags": ["professional", "german-steel", "ergonomic", "sharp", "precision"]
+    },
+    {
+        "product_id": "prod-009",
+        "name": "Smart Home Security Camera",
+        "description": "4K HD security camera with night vision, motion detection, and smartphone app control. Weather-resistant for indoor/outdoor use.",
+        "category": "Home Security",
+        "price": 179.99,
+        "brand": "SecureVision",
+        "tags": ["4k", "night-vision", "motion-detection", "smart-home", "weather-resistant"]
+    },
+    {
+        "product_id": "prod-010",
+        "name": "Bamboo Cutting Board Set",
+        "description": "Sustainable bamboo cutting board set with three different sizes. Naturally antimicrobial and knife-friendly surface.",
+        "category": "Kitchen & Dining",
+        "price": 45.99,
+        "brand": "EcoKitchen",
+        "tags": ["bamboo", "sustainable", "antimicrobial", "eco-friendly", "knife-friendly"]
+    },
+    {
+        "product_id": "prod-011",
+        "name": "Gaming Mechanical Keyboard",
+        "description": "RGB backlit mechanical gaming keyboard with tactile switches and programmable macros. Built for competitive gaming.",
+        "category": "Gaming",
+        "price": 159.99,
+        "brand": "GameForce",
+        "tags": ["mechanical", "rgb", "gaming", "tactile", "programmable"]
+    },
+    {
+        "product_id": "prod-012",
+        "name": "Yoga Mat Premium Cork",
+        "description": "Natural cork yoga mat with excellent grip and alignment guides. Eco-friendly, non-slip surface perfect for all yoga styles.",
+        "category": "Sports & Fitness",
+        "price": 68.99,
+        "brand": "ZenFlow",
+        "tags": ["yoga", "cork", "eco-friendly", "non-slip", "alignment-guides"]
+    },
+    {
+        "product_id": "prod-013",
+        "name": "Smart LED Light Bulbs 4-Pack",
+        "description": "WiFi-enabled smart LED bulbs with 16 million colors and voice control compatibility. Energy efficient and long-lasting.",
+        "category": "Smart Home",
+        "price": 49.99,
+        "brand": "BrightSmart",
+        "tags": ["smart-led", "wifi", "voice-control", "energy-efficient", "color-changing"]
+    },
+    {
+        "product_id": "prod-014",
+        "name": "Portable Bluetooth Speaker",
+        "description": "Compact waterproof Bluetooth speaker with 360-degree sound and 20-hour battery life. Perfect for outdoor adventures.",
+        "category": "Audio",
+        "price": 79.99,
+        "brand": "SoundWave",
+        "tags": ["bluetooth", "waterproof", "portable", "360-sound", "long-battery"]
+    },
+    {
+        "product_id": "prod-015",
+        "name": "Memory Foam Mattress Topper",
+        "description": "Gel-infused memory foam mattress topper that provides pressure relief and temperature regulation for better sleep.",
+        "category": "Home & Bedding",
+        "price": 149.99,
+        "brand": "SleepWell",
+        "tags": ["memory-foam", "gel-infused", "pressure-relief", "temperature-regulation"]
+    },
+    {
+        "product_id": "prod-016",
+        "name": "Ceramic Non-Stick Cookware Set",
+        "description": "10-piece ceramic non-stick cookware set that's PFOA-free and oven-safe up to 450°F. Even heat distribution.",
+        "category": "Kitchen & Dining",
+        "price": 249.99,
+        "brand": "CeramicChef",
+        "tags": ["ceramic", "non-stick", "pfoa-free", "oven-safe", "even-heating"]
+    },
+    {
+        "product_id": "prod-017",
+        "name": "Electric Toothbrush with UV Sanitizer",
+        "description": "Advanced electric toothbrush with pressure sensor, multiple cleaning modes, and UV sanitizing base for optimal oral health.",
+        "category": "Health & Personal Care",
+        "price": 199.99,
+        "brand": "DentalPro",
+        "tags": ["electric-toothbrush", "uv-sanitizer", "pressure-sensor", "multiple-modes"]
+    },
+    {
+        "product_id": "prod-018",
+        "name": "Adjustable Laptop Stand",
+        "description": "Aluminum adjustable laptop stand with excellent ventilation and ergonomic viewing angles. Compatible with all laptop sizes.",
+        "category": "Office Accessories",
+        "price": 59.99,
+        "brand": "WorkSpace",
+        "tags": ["adjustable", "aluminum", "ergonomic", "ventilation", "universal"]
+    },
+    {
+        "product_id": "prod-019",
+        "name": "Essential Oil Diffuser Set",
+        "description": "Ultrasonic essential oil diffuser with color-changing LED lights and timer settings. Includes starter set of 6 oils.",
+        "category": "Home & Wellness",
+        "price": 89.99,
+        "brand": "AromaZen",
+        "tags": ["essential-oils", "ultrasonic", "led-lights", "timer", "aromatherapy"]
+    },
+    {
+        "product_id": "prod-020",
+        "name": "Resistance Bands Exercise Set",
+        "description": "Complete resistance bands workout set with multiple resistance levels, door anchor, and exercise guide for full-body training.",
+        "category": "Sports & Fitness",
+        "price": 34.99,
+        "brand": "FitForce",
+        "tags": ["resistance-bands", "multiple-levels", "door-anchor", "full-body", "portable"]
+    },
+    {
+        "product_id": "prod-021",
+        "name": "Smart Thermostat",
+        "description": "WiFi-enabled programmable thermostat with learning capabilities and energy usage reports. Control from anywhere via smartphone app.",
+        "category": "Smart Home",
+        "price": 229.99,
+        "brand": "ClimateControl",
+        "tags": ["smart-thermostat", "wifi", "programmable", "energy-saving", "learning"]
+    },
+    {
+        "product_id": "prod-022",
+        "name": "Stainless Steel Kitchen Scale",
+        "description": "Digital kitchen scale with precision weighing up to 11lbs. Tare function and multiple unit measurements for accurate cooking.",
+        "category": "Kitchen & Dining",
+        "price": 29.99,
+        "brand": "PrecisionWeigh",
+        "tags": ["digital-scale", "stainless-steel", "precision", "tare-function", "multiple-units"]
+    },
+    {
+        "product_id": "prod-023",
+        "name": "Wireless Car Charger Mount",
+        "description": "Automatic clamping wireless car charger mount with fast charging and adjustable viewing angles. Compatible with all phone sizes.",
+        "category": "Automotive",
+        "price": 49.99,
+        "brand": "DriveCharge",
+        "tags": ["wireless-charging", "car-mount", "automatic-clamping", "fast-charging", "adjustable"]
+    }
+]
